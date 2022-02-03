@@ -106,6 +106,8 @@ const layersSetup = (layersOrder) => {
       layerObj.options?.["bypassDNA"] !== undefined
         ? layerObj.options?.["bypassDNA"]
         : false,
+    x: layerObj.x,
+    y: layerObj.y,
   }));
   return layers;
 };
@@ -198,7 +200,7 @@ const addText = (_sig, x, y, size) => {
   ctx.fillText(_sig, x, y);
 };
 
-const drawElement = (_renderObject, _index, _layersLen) => {
+const drawElement = (_renderObject, _index, _layersLen, x, y) => {
   ctx.globalAlpha = _renderObject.layer.opacity;
   ctx.globalCompositeOperation = _renderObject.layer.blend;
   text.only
@@ -210,8 +212,8 @@ const drawElement = (_renderObject, _index, _layersLen) => {
       )
     : ctx.drawImage(
         _renderObject.loadedImage,
-        0,
-        0,
+        x ? x : 0,
+        y ? y: 0,
         format.width,
         format.height
       );
@@ -229,6 +231,8 @@ const constructLayerToDna = (_dna = "", _layers = []) => {
       blend: layer.blend,
       opacity: layer.opacity,
       selectedElement: selectedElement,
+      x: layer.x,
+      y: layer.y,
     };
   });
   return mappedDnaToLayers;
@@ -356,6 +360,7 @@ const startCreating = async () => {
     const layers = layersSetup(
       layerConfigurations[layerConfigIndex].layersOrder
     );
+    
     while (
       editionCount <= layerConfigurations[layerConfigIndex].growEditionSizeTo
     ) {
@@ -369,6 +374,7 @@ const startCreating = async () => {
         });
 
         await Promise.all(loadedElements).then((renderObjectArray) => {
+          console.log(renderObjectArray, '<----');
           debugLogs ? console.log("Clearing canvas") : null;
           ctx.clearRect(0, 0, format.width, format.height);
           if (gif.export) {
@@ -389,7 +395,9 @@ const startCreating = async () => {
             drawElement(
               renderObject,
               index,
-              layerConfigurations[layerConfigIndex].layersOrder.length
+              layerConfigurations[layerConfigIndex].layersOrder.length,
+              renderObject.layer.x,
+              renderObject.layer.y,
             );
             if (gif.export) {
               hashlipsGiffer.add();
